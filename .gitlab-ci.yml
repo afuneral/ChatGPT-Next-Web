@@ -95,7 +95,7 @@ stages:
 
 # ---------   build stage ---------
 build_linux:
-  image: registry.yealinkops.com/common/node-canvas:18.17.0.0
+  image: registry.yealinkops.com/common/node-canvas:16.14.0.0
   stage: build
   <<: *only_run_merge_requests_or_tag
   script:

@@ -1,4 +1,4 @@
-FROM  cr.yealinkops.com/runtime/node:18.17.0.0
+FROM  cr.yealinkops.com/runtime/node:16.14.0.0
 
 ARG DOCKER_PACKAGE_PATH
 ENV DOCKER_PACKAGE_PATH "${DOCKER_PACKAGE_PATH}"
