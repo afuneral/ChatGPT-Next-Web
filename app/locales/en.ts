@@ -13,6 +13,7 @@ const en: LocaleType = {
       : "Unauthorized access, please enter access code in [auth](/#/auth) page, or enter your OpenAI API Key.",
   },
   Auth: {
+    Name: "User Name",
     Title: "Need Access Code",
     Tips: "Please enter access code below",
     Input: "access code",

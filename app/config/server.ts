@@ -45,8 +45,8 @@ export const getServerSideConfig = () => {
     baseUrl: process.env.BASE_URL,
     proxyUrl: process.env.PROXY_URL,
     isVercel: !!process.env.VERCEL,
-    hideUserApiKey: !!process.env.HIDE_USER_API_KEY,
-    disableGPT4: !!process.env.DISABLE_GPT4,
-    hideBalanceQuery: !!process.env.HIDE_BALANCE_QUERY,
+    hideUserApiKey: !!process.env.HIDE_USER_API_KEY || 1, // 用户自行填入 API Key
+    disableGPT4: !!process.env.DISABLE_GPT4, // 用户使用 GPT-4
+    hideBalanceQuery: !!process.env.HIDE_BALANCE_QUERY || 1, // 用户查询余额
   };
 };

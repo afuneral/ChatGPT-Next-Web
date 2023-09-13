@@ -247,6 +247,7 @@ function DangerItems() {
   );
 }
 
+/* 上次同步 */
 function SyncItems() {
   const syncStore = useSyncStore();
   const webdav = syncStore.webDavConfig;
@@ -329,6 +330,7 @@ export function Settings() {
     console.log("[Update] remote version ", updateStore.remoteVersion);
   }
 
+  // 余额查询
   const usage = {
     used: updateStore.used,
     subscription: updateStore.subscription,
@@ -406,6 +408,7 @@ export function Settings() {
       </div>
       <div className={styles["settings"]}>
         <List>
+          {/* 头像 */}
           <ListItem title={Locale.Settings.Avatar}>
             <Popover
               onClose={() => setShowEmojiPicker(false)}
@@ -427,8 +430,17 @@ export function Settings() {
               </div>
             </Popover>
           </ListItem>
+          <ListItem title={Locale.Auth.Name}>
+            <div
+              className={styles.avatar}
+              onClick={() => setShowEmojiPicker(true)}
+            >
+              <IconButton text={accessStore.userInfo.name || "-"} />
+            </div>
+          </ListItem>
 
-          <ListItem
+          {/* 当前版本 */}
+          {/*<ListItem
             title={Locale.Settings.Update.Version(currentVersion ?? "unknown")}
             subTitle={
               checkingUpdate
@@ -451,8 +463,8 @@ export function Settings() {
                 onClick={() => checkUpdate(true)}
               />
             )}
-          </ListItem>
-
+          </ListItem>*/}
+          {/* 发送键 */}
           <ListItem title={Locale.Settings.SendKey}>
             <Select
               value={config.submitKey}
@@ -470,7 +482,7 @@ export function Settings() {
               ))}
             </Select>
           </ListItem>
-
+          {/* 主题 */}
           <ListItem title={Locale.Settings.Theme}>
             <Select
               value={config.theme}
@@ -487,7 +499,7 @@ export function Settings() {
               ))}
             </Select>
           </ListItem>
-
+          {/* Language */}
           <ListItem title={Locale.Settings.Lang.Name}>
             <Select
               value={getLang()}
@@ -502,7 +514,7 @@ export function Settings() {
               ))}
             </Select>
           </ListItem>
-
+          {/* 字体大小 */}
           <ListItem
             title={Locale.Settings.FontSize.Title}
             subTitle={Locale.Settings.FontSize.SubTitle}
@@ -521,7 +533,7 @@ export function Settings() {
               }
             ></InputRange>
           </ListItem>
-
+          {/* 自动生成标题 */}
           <ListItem
             title={Locale.Settings.AutoGenerateTitle.Title}
             subTitle={Locale.Settings.AutoGenerateTitle.SubTitle}
@@ -537,7 +549,7 @@ export function Settings() {
               }
             ></input>
           </ListItem>
-
+          {/* 预览气泡 */}
           <ListItem
             title={Locale.Settings.SendPreviewBubble.Title}
             subTitle={Locale.Settings.SendPreviewBubble.SubTitle}
@@ -555,8 +567,7 @@ export function Settings() {
           </ListItem>
         </List>
 
-        <SyncItems />
-
+        {/* 面具启动页 */}
         <List>
           <ListItem
             title={Locale.Settings.Mask.Splash.Title}
@@ -591,7 +602,7 @@ export function Settings() {
             ></input>
           </ListItem>
         </List>
-
+        {/* 隐藏内置面具 */}
         <List>
           <ListItem
             title={Locale.Settings.Prompt.Disable.Title}
@@ -673,7 +684,7 @@ export function Settings() {
               </ListItem>
             </>
           ) : null}
-
+          {/* 余额查询 */}
           {!accessStore.hideBalanceQuery ? (
             <ListItem
               title={Locale.Settings.Usage.Title}
