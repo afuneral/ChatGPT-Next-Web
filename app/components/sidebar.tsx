@@ -12,7 +12,8 @@ import DragIcon from "../icons/drag.svg";
 
 import Locale from "../locales";
 
-import { useAppConfig, useChatStore } from "../store";
+import { api } from "../client/api";
+import { useAccessStore, useAppConfig, useChatStore } from "../store";
 
 import {
   MAX_SIDEBAR_WIDTH,
@@ -99,6 +100,7 @@ function useDragSideBar() {
 
 export function SideBar(props: { className?: string }) {
   const chatStore = useChatStore();
+  const accessStore = useAccessStore();
 
   // drag side bar
   const { onDragMouseDown, shouldNarrow } = useDragSideBar();
@@ -106,6 +108,16 @@ export function SideBar(props: { className?: string }) {
   const config = useAppConfig();
 
   useHotKey();
+
+  // 退出登录
+  function logoutHandle() {
+    api.llm.logout().then((res: any) => {
+      if (res && res.ret > -1) {
+        accessStore.updateToken("");
+        location.reload();
+      }
+    });
+  }
 
   return (
     <div
@@ -168,14 +180,7 @@ export function SideBar(props: { className?: string }) {
           <IconButton
             icon={<Share />}
             text={shouldNarrow ? undefined : Locale.Home.Exit}
-            onClick={() => {
-              if (config.dontShowMaskSplashScreen) {
-                chatStore.newSession();
-                navigate(Path.Chat);
-              } else {
-                navigate(Path.NewChat);
-              }
-            }}
+            onClick={logoutHandle}
             shadow
           />
         </div>

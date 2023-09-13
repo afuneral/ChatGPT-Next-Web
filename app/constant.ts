@@ -51,6 +51,10 @@ export const REQUEST_TIMEOUT_MS = 60000;
 export const EXPORT_MESSAGE_CLASS_NAME = "export-markdown";
 
 export const OpenaiPath = {
+  LoginPath: "chatgpt/api/v1/user/login",
+  AuthPath: "chatgpt/api/v1/user/verify",
+  UserInfoPath: "chatgpt/api/v1/user/info",
+  logoutPath: "chatgpt/api/v1/user/logout",
   ChatPath: "v1/chat/completions",
   UsagePath: "dashboard/billing/usage",
   SubsPath: "dashboard/billing/subscription",

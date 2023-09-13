@@ -44,6 +44,11 @@ export interface LLMModel {
 }
 
 export abstract class LLMApi {
+  abstract login(): Promise<void>;
+  abstract auth(params: any): Promise<void>;
+  abstract userInfo(): Promise<void>;
+  abstract logout(): Promise<void>;
+
   abstract chat(options: ChatOptions): Promise<void>;
   abstract usage(): Promise<LLMUsage>;
   abstract models(): Promise<LLMModel[]>;

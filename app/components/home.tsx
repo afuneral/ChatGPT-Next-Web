@@ -17,11 +17,13 @@ import { ErrorBoundary } from "./error";
 
 import { getISOLang } from "../locales";
 
+// HashRouter BrowserRouter
 import {
-  HashRouter as Router,
+  BrowserRouter as Router,
   Routes,
   Route,
   useLocation,
+  useSearchParams,
 } from "react-router-dom";
 import { SideBar } from "./sidebar";
 import { useAppConfig } from "../store/config";
@@ -126,7 +128,11 @@ function Screen() {
   const isAuth = location.pathname === Path.Auth;
   const isMobileScreen = useMobileScreen();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
   useEffect(() => {
+    // 清空路由参数
+    if (searchParams.get("code")) setSearchParams({});
     loadAsyncGoogleFont();
   }, []);
 
@@ -164,11 +170,35 @@ function Screen() {
   );
 }
 
-export function useLoadData() {
+export function useLoadData(searchParams: any) {
   const config = useAppConfig();
+  const accessStore = useAccessStore();
 
   useEffect(() => {
     (async () => {
+      let token = accessStore.token;
+      // Auth登录
+      if (!token) {
+        if (searchParams.code) {
+          const res: any = await api.llm.auth(searchParams);
+          token = res.ret > -1 ? res.data.token : "";
+          accessStore.updateToken(token);
+        }
+
+        if (!token) {
+          await getRedirectUri();
+        }
+      } else {
+        // 获取用户信息
+        const res: any = await api.llm.userInfo();
+        if (res.ret > -1) {
+          accessStore.setUserInfo(res.data);
+        } else {
+          accessStore.updateToken("");
+          await getRedirectUri();
+        }
+      }
+
       const models = await api.llm.models();
       config.mergeModels(models);
     })();
@@ -176,9 +206,17 @@ export function useLoadData() {
   }, []);
 }
 
-export function Home() {
+async function getRedirectUri() {
+  // @ts-ignore
+  const { data } = await api.llm.login();
+  if (data && data.redirectURI) {
+    window.location.href = data.redirectURI;
+  }
+}
+
+export function Home(props: { searchParams: any }) {
+  useLoadData(props.searchParams);
   useSwitchTheme();
-  useLoadData();
   useHtmlLang();
 
   useEffect(() => {

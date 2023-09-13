@@ -975,14 +975,15 @@ function _Chat() {
     submit: (text) => {
       doSubmit(text);
     },
-    code: (text) => {
+    /*code: (text) => {
       console.log("[Command] got code from url: ", text);
-      showConfirm(Locale.URLCommand.Code + `code = ${text}`).then((res) => {
+
+      /!*showConfirm(Locale.URLCommand.Code + `code = ${text}`).then((res) => {
         if (res) {
           accessStore.updateCode(text);
         }
-      });
-    },
+      });*!/
+    },*/
     settings: (text) => {
       try {
         const payload = JSON.parse(text) as {

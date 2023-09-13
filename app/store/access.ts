@@ -11,6 +11,8 @@ console.log("[API] default openai url", DEFAULT_OPENAI_URL);
 
 const DEFAULT_ACCESS_STATE = {
   token: "",
+  userInfo: {},
+
   accessCode: "",
   needCode: true,
   hideUserApiKey: false,
@@ -24,6 +26,9 @@ export const useAccessStore = createPersistStore(
   { ...DEFAULT_ACCESS_STATE },
 
   (set, get) => ({
+    setUserInfo(info: object) {
+      set(() => ({ userInfo: info || {} }));
+    },
     enabledAccessControl() {
       this.fetch();
 

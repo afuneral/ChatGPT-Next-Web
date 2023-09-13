@@ -48,6 +48,50 @@ export class ChatGPTApi implements LLMApi {
     return res.choices?.at(0)?.message?.content ?? "";
   }
 
+  /* 获取Auth登录地址 */
+  async login() {
+    const res = await fetch(this.path(OpenaiPath.LoginPath), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "x-requested-with": "XMLHttpRequest",
+      },
+    });
+    return await res.json();
+  }
+  /* Auth登录 */
+  async auth(params: any) {
+    const res = await fetch(
+      this.path(
+        `${OpenaiPath.AuthPath}?code=${params.code}&scope=${params.scope}&state=${params.state}`,
+      ),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "x-requested-with": "XMLHttpRequest",
+        },
+      },
+    );
+    return await res.json();
+  }
+  /* 获取用户信息 */
+  async userInfo() {
+    const res = await fetch(this.path(OpenaiPath.UserInfoPath), {
+      method: "GET",
+      headers: getHeaders(),
+    });
+    return await res.json();
+  }
+  /* 登出 */
+  async logout() {
+    const res = await fetch(this.path(OpenaiPath.logoutPath), {
+      method: "POST",
+      headers: getHeaders(),
+    });
+    return await res.json();
+  }
+
   async chat(options: ChatOptions) {
     const messages = options.messages.map((v) => ({
       role: v.role,
