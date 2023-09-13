@@ -16,6 +16,6 @@ COPY --chown=chatgpt-next-web:chatgpt-next-web ${DOCKER_PACKAGE_PATH} ${SERVICE_
 RUN chmod +x /docker-entrypoint.sh \
     && ln -s /docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-WORKDIR ${SERVICE_HOME}/service
+WORKDIR ${SERVICE_HOME}/
 ENTRYPOINT [ "/docker-entrypoint.sh" ]
 CMD ["chatgpt-next-web"]
