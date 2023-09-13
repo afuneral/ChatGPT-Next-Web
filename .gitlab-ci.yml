@@ -1,0 +1,162 @@
+# +=====================================================+
+# |             global setting                          |
+# +=====================================================+
+
+# --------------- gitlab ci 变量设置 -----------
+# 可传递到各个 job 的环境变量
+variables:
+  # 产品线/业务组
+  PROJECT_NAME: worklink/chatgpt
+  ### 里程碑
+  MILESTONE: V30-SP
+  # 模块名称
+  MODULE_NAME:  chatgpt-next-web
+
+  # 构建结果目录, 空格分割多个平台
+  # 允许的值: linux windows macos ios android ，
+  # 使用了非法值，upload 会报错
+  TGZ_PACKAGE_PLATFORM: linux
+
+  # 多平台构建支持，是各个平台的构建制品存放目录
+  # TGZ_PACKAGE_PLATFORM 里定义了几个，
+  # 下面 TGZ_PACKAGE_PATH_{平台名大写} 就要有几个，
+  # 同时 build 步骤要能生成出下面目录的及其里面的内容
+  TGZ_PACKAGE_PATH_LINUX:    gitlab_ci_build/linux
+  TGZ_PACKAGE_PATH_WINDOWS:  gitlab_ci_build/windows
+  TGZ_PACKAGE_PATH_MACOS:    gitlab_ci_build/macos
+  TGZ_PACKAGE_PATH_IOS:      gitlab_ci_build/ios
+  TGZ_PACKAGE_PATH_ANDROID:  gitlab_ci_build/android
+
+  # 各个平台需要 upload tgz 的子模块列表, 多个子模块用 空格 分割
+  SUB_MODULE_LIST_LINUX:        ${SUB_MODULE_LIST}
+  SUB_MODULE_LIST_WINDOWS:      helloworld
+  SUB_MODULE_LIST_MACOS:        ${SUB_MODULE_LIST}
+  SUB_MODULE_LIST_IOS:          ${SUB_MODULE_LIST}
+  SUB_MODULE_LIST_ANDROID:      ${SUB_MODULE_LIST}
+
+  # docker 配置
+  DOCKER_PACKAGE_PATH:          gitlab_ci_build/linux
+  SUB_MODULE_LIST_DOCKER:       ${SUB_MODULE_LIST}
+  # baker or local
+  DOCKERFILE_LOCATION:          local
+  DOCKERFILE_GIT_BRANCH:        dev
+
+  # gitlab-ci相关执行脚本路径
+  GITLAB_CI_PATH:                   .gitlab_ci
+  GITLAB_CI_BUILD_SCRIPT_LINUX:     $GITLAB_CI_PATH/build_linux.sh
+  GITLAB_CI_BUILD_SCRIPT_WINDOWS:   $GITLAB_CI_PATH/build_windows.bat
+  GITLAB_CI_TEST_SCRIPT:            $GITLAB_CI_PATH/test.sh
+  GITLAB_CI_DEPLOY_SCRIPT:          $GITLAB_CI_PATH/deploy.sh
+
+  # job 拉取 git 仓库，递归拉取 submodule
+  GIT_SUBMODULE_STRATEGY: recursive
+
+  EMAIL_RECEIVER: worklink-rd@yealink.com
+
+  # 单机环境编码，cloud-ansible记录了团队及环境编码与单机ip之间的映射关系
+  ALL_IN_ONE_ENV: be2
+  # cloud-ansible项目存放单机配置的目录
+  DEPLOY_CFG_DIR: 32
+  # cloud-ansible项目存放单机配置文件的名称
+  DEPLOY_CFG_NAME: alpha
+  # 主开发分支，该分支的每一次更新都会触发该项目所属的单机环境升级版本
+  MAIN_DEV_BRANCH_FOR_ALL_IN_ONE: master-dev
+  # MR模式启用安全扫描
+  ENABLE_SECURITY_TEST: 'true'
+
+# 只有合并请求/打标签才执行 job
+.only_run_merge_requests_or_tag: &only_run_merge_requests_or_tag
+  only:
+    # - merge_requests
+    - tags
+    - /^master.*/
+
+# 只有打标签，标签以 develop- 或 release- 开头的才执行 job
+.only_run_tag_with_develop_or_release: &only_run_tag_with_develop_or_release
+  except:
+    - branches
+  only:
+    - /^develop-[[:digit:]].*/
+    - /^release-[[:digit:]].*/
+
+
+# +=====================================================+
+# |                  stages                             |
+# +=====================================================+
+
+# ------ Declare all stage  -------
+stages:
+  - build
+  - unit test
+  - upload
+  - report
+  - deploy
+  - test
+
+# ---------   build stage ---------
+build_linux:
+  image: registry.yealinkops.com/common/node-canvas:18.17.0.0
+  stage: build
+  <<: *only_run_merge_requests_or_tag
+  script:
+    - sh $GITLAB_CI_BUILD_SCRIPT_LINUX
+  # tags 用来匹配跑该 job 的 gitlab runner
+  tags:
+    - devops_docker_runner
+  # artifacts 定义需要在整个 pipeline 的 stage job 之间传递的制品
+  # 制品会在 job 结束时上传到 gitlab 上， 在接下来的其他 job 开始恢复到原目录位置
+  # 下述定义了  $TGZ_PACKAGE_PATH_LINUX 这个 linux 平台的制品在gitlab 上保留 60 分钟
+  artifacts:
+    name: $MODULE_NAME
+    expire_in: 60 mins
+    paths:
+      - $CI_PROJECT_DIR/$TGZ_PACKAGE_PATH_LINUX
+  cache:
+    paths:
+      - node_modules
+
+# ---------   test stage ---------
+# unit test:
+#   stage: unit test
+#   <<: *only_run_merge_requests_or_tag
+#   tags:
+#     - devops_docker_runner
+#   script:
+#     - sh $GITLAB_CI_TEST_SCRIPT
+
+# ---------   upload stage ---------
+# 这里的步骤由运维来维护，所以 通过 include 来引用外部的 gitlab ci yml 模板
+# 执行 pipeline 的人员需要有 open_document/common/hello_ci 项目的读权限，才能拉到模板
+#
+include:
+  # tar.gz 包 打包并上传到 nexus
+  - project: "open_document/common/gitlab_ci"
+    ref: master
+    file: 'gitlab_ci/template/tar_and_upload_tgz_package.yml'
+  # docker 镜像 build 和 push 到 registry.yealinkops.com 步骤 此步骤需要 项目根目录下有 Dockerfile
+  # 不需要此步骤的可以删除
+  - project: "open_document/common/gitlab_ci"
+    ref: master
+    file: 'gitlab_ci/template/build_and_push_docker_image.yml'
+  # 将版本信息发送到告警中心，自动发送版本邮件
+  - project: "open_document/common/gitlab_ci"
+    ref: master
+    file: 'gitlab_ci/template/report_to_alertcenter.yml'
+  # 单机部署
+  - project: "open_document/common/gitlab_ci"
+    ref: master
+    file: 'gitlab_ci/template/deploy.yml'
+  ## 引用标准测试模板
+  - project: "open_document/common/gitlab_ci"
+    ref: master
+    # ref: rebuild_test_template  # CI模板代码合并前的测试分支
+    file: 'gitlab_ci/template/test/test_code_quality.yml'
+
+
+
+# ---------   deploy stage ---------
+# deploy:
+#   stage: deploy
+#   <<: *only_run_tag_with_develop_or_release
+#   script:
+#     - sh $GITLAB_CI_PATH/deploy.sh

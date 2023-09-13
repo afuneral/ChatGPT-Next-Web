@@ -1,62 +1,21 @@
-FROM node:18-alpine AS base
+FROM  cr.yealinkops.com/runtime/node:18.17.0.0
 
-FROM base AS deps
+ARG DOCKER_PACKAGE_PATH
+ENV DOCKER_PACKAGE_PATH "${DOCKER_PACKAGE_PATH}"
 
-RUN apk add --no-cache libc6-compat
+ENV SERVICE_NAME=chatgpt-next-web
+ENV SERVICE_HOME=/opt/${SERVICE_NAME}
+ENV SERVICE_EXEC_START="npm run start"
+ENV PATH=${SERVICE_HOME}/bin:$PATH
 
-WORKDIR /app
+RUN groupadd ${SERVICE_NAME} && useradd -g ${SERVICE_NAME} ${SERVICE_NAME}
 
-COPY package.json yarn.lock ./
+COPY --chown=chatgpt-next-web:chatgpt-next-web docker-entrypoint.sh /docker-entrypoint.sh
+COPY --chown=chatgpt-next-web:chatgpt-next-web ${DOCKER_PACKAGE_PATH} ${SERVICE_HOME}
 
-RUN yarn config set registry 'https://registry.npmmirror.com/'
-RUN yarn install
+RUN chmod +x /docker-entrypoint.sh \
+    && ln -s /docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 
-FROM base AS builder
-
-RUN apk update && apk add --no-cache git
-
-ENV OPENAI_API_KEY=""
-ENV CODE=""
-
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
-RUN yarn build
-
-FROM base AS runner
-WORKDIR /app
-
-RUN apk add proxychains-ng
-
-ENV PROXY_URL=""
-ENV OPENAI_API_KEY=""
-ENV CODE=""
-
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/.next/server ./.next/server
-
-EXPOSE 3000
-
-CMD if [ -n "$PROXY_URL" ]; then \
-        export HOSTNAME="127.0.0.1"; \
-        protocol=$(echo $PROXY_URL | cut -d: -f1); \
-        host=$(echo $PROXY_URL | cut -d/ -f3 | cut -d: -f1); \
-        port=$(echo $PROXY_URL | cut -d: -f3); \
-        conf=/etc/proxychains.conf; \
-        echo "strict_chain" > $conf; \
-        echo "proxy_dns" >> $conf; \
-        echo "remote_dns_subnet 224" >> $conf; \
-        echo "tcp_read_time_out 15000" >> $conf; \
-        echo "tcp_connect_time_out 8000" >> $conf; \
-        echo "localnet 127.0.0.0/255.0.0.0" >> $conf; \
-        echo "localnet ::1/128" >> $conf; \
-        echo "[ProxyList]" >> $conf; \
-        echo "$protocol $host $port" >> $conf; \
-        cat /etc/proxychains.conf; \
-        proxychains -f $conf node server.js; \
-    else \
-        node server.js; \
-    fi
+WORKDIR ${SERVICE_HOME}/service
+ENTRYPOINT [ "/docker-entrypoint.sh" ]
+CMD ["chatgpt-next-web"]
