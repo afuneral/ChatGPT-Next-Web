@@ -111,10 +111,14 @@ export function SideBar(props: { className?: string }) {
 
   // 退出登录
   function logoutHandle() {
-    api.llm.logout().then((res: any) => {
+    api.llm.logout().then(async (res: any) => {
       if (res && res.ret > -1) {
         accessStore.updateToken("");
-        location.reload();
+
+        const res: any = await api.llm.login();
+        if (res && res.data && res.data.redirectURI) {
+          window.location.href = res.data.redirectURI;
+        }
       }
     });
   }

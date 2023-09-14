@@ -207,10 +207,9 @@ export function useLoadData(searchParams: any) {
 }
 
 async function getRedirectUri() {
-  // @ts-ignore
-  const { data } = await api.llm.login();
-  if (data && data.redirectURI) {
-    window.location.href = data.redirectURI;
+  const res: any = await api.llm.login();
+  if (res && res.data && res.data.redirectURI) {
+    window.location.href = res.data.redirectURI;
   }
 }
 
