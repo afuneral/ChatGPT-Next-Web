@@ -11,8 +11,7 @@ npm install --registry=https://registry.npm.taobao.org/
 
 npm run build
 
-cp -r ./package.json ./yarn.lock ./node_modules ./public ./.next  ./app
-cp -r ./app ./$TGZ_PACKAGE_PATH_LINUX/$MODULE_NAME
+cp -r package.json yarn.lock node_modules public .next app ./$TGZ_PACKAGE_PATH_LINUX/$MODULE_NAME
 
 #=============================================================>
 echo "############## End to execute job:build ##############"
