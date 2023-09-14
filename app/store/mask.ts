@@ -5,6 +5,7 @@ import { ModelConfig, useAppConfig } from "./config";
 import { StoreKey } from "../constant";
 import { nanoid } from "nanoid";
 import { createPersistStore } from "../utils/store";
+import { useAccessStore } from "../store/access";
 
 export type Mask = {
   id: string;
@@ -94,7 +95,19 @@ export const useMaskStore = createPersistStore(
             },
           }) as Mask,
       );
-      return userMasks.concat(buildinMasks);
+
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const accessStore = useAccessStore();
+      // 根据配置隐藏面具
+      let allMask = userMasks.concat(buildinMasks);
+      if (accessStore.disableGPT4) {
+        allMask = allMask.filter(
+          (x) =>
+            accessStore.disableGPT4 && !x.modelConfig.model.startsWith("gpt-4"),
+        );
+      }
+
+      return allMask;
     },
     search(text: string) {
       return Object.values(get().masks);

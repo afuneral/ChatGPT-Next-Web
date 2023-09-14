@@ -129,7 +129,7 @@ export const useAppConfig = createPersistStore(
         .map((m) => ({ name: m, available: true }));
 
       const models = get().models.concat(customModels);
-      return models;
+      return models.filter((x) => x.available);
     },
   }),
   {

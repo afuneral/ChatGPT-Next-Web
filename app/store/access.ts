@@ -18,7 +18,7 @@ const DEFAULT_ACCESS_STATE = {
   },
 
   accessCode: "",
-  needCode: true,
+  needCode: false, // 是否需要访问密码
   hideUserApiKey: false,
   hideBalanceQuery: false,
   disableGPT4: false,
