@@ -19,7 +19,7 @@ import { getISOLang } from "../locales";
 
 // HashRouter BrowserRouter
 import {
-  BrowserRouter as Router,
+  HashRouter as Router,
   Routes,
   Route,
   useLocation,
@@ -177,6 +177,7 @@ export function useLoadData(searchParams: any) {
   useEffect(() => {
     (async () => {
       let token = accessStore.token;
+
       // Auth登录
       if (!token) {
         if (searchParams.code) {
@@ -184,12 +185,12 @@ export function useLoadData(searchParams: any) {
           token = res.ret > -1 ? res.data.token : "";
           accessStore.updateToken(token);
         }
+        // 获取登录重定向地址
+        if (!token) await getRedirectUri();
+      }
 
-        if (!token) {
-          await getRedirectUri();
-        }
-      } else {
-        // 获取用户信息
+      // 获取用户信息
+      if (token) {
         const res: any = await api.llm.userInfo();
         if (res.ret > -1) {
           accessStore.setUserInfo(res.data);
@@ -206,6 +207,7 @@ export function useLoadData(searchParams: any) {
   }, []);
 }
 
+/* 获取登录重定向地址 */
 async function getRedirectUri() {
   const res: any = await api.llm.login();
   if (res && res.data && res.data.redirectURI) {
