@@ -1,4 +1,9 @@
-import { ModalConfigValidator, ModelConfig, useAppConfig } from "../store";
+import {
+  ModalConfigValidator,
+  ModelConfig,
+  useAppConfig,
+  useAccessStore,
+} from "../store";
 
 import Locale from "../locales";
 import { InputRange } from "./input-range";
@@ -9,6 +14,15 @@ export function ModelConfigList(props: {
   updateConfig: (updater: (config: ModelConfig) => void) => void;
 }) {
   const config = useAppConfig();
+  const accessStore = useAccessStore();
+
+  let allModels = config.allModels();
+  // 根据 disableGPT4 过滤 GPT4 模型
+  if (accessStore.disableGPT4) {
+    allModels = allModels.filter(
+      (m) => accessStore.disableGPT4 && !m.name.startsWith("gpt-4"),
+    );
+  }
 
   return (
     <>
@@ -24,7 +38,7 @@ export function ModelConfigList(props: {
             );
           }}
         >
-          {config.allModels().map((v, i) => (
+          {allModels.map((v, i) => (
             <option value={v.name} key={i} disabled={!v.available}>
               {v.name}
             </option>

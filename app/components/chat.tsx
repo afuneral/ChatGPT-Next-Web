@@ -413,6 +413,7 @@ export function ChatActions(props: {
   const config = useAppConfig();
   const navigate = useNavigate();
   const chatStore = useChatStore();
+  const accessStore = useAccessStore();
 
   // switch themes
   const theme = config.theme;
@@ -434,7 +435,14 @@ export function ChatActions(props: {
     () =>
       config
         .allModels()
-        .filter((m) => m.available)
+        .filter((m) => {
+          // 根据 disableGPT4 过滤 GPT4 模型
+          return (
+            m.available &&
+            (!accessStore.disableGPT4 ||
+              (accessStore.disableGPT4 && !m.name.startsWith("gpt-4")))
+          );
+        })
         .map((m) => m.name),
     [config],
   );
